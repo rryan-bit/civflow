@@ -1,8 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 
 type RecorderState = "idle" | "recording" | "recorded";
 
@@ -19,6 +21,10 @@ export default function CaptureForm({ projectId }: { projectId: string }) {
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+  const docInputRef = useRef<HTMLInputElement>(null);
+
+  const photoPreviews = useMemo(() => photos.map((f) => URL.createObjectURL(f)), [photos]);
 
   async function startRecording() {
     setError(null);
@@ -49,6 +55,12 @@ export default function CaptureForm({ projectId }: { projectId: string }) {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
+
+    if (!navigator.onLine) {
+      setError("You're offline — photos and voice notes can't upload until you're back on signal. Nothing has been lost yet; just try again once connected.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
@@ -129,67 +141,89 @@ export default function CaptureForm({ projectId }: { projectId: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-6 space-y-6">
-      <div>
-        <label className="block text-sm font-medium text-slate-700">Site photos</label>
+    <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+      <Card className="p-5">
+        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Site photos</label>
         <input
+          ref={photoInputRef}
           type="file"
           accept="image/*"
           capture="environment"
           multiple
           onChange={(e) => setPhotos(Array.from(e.target.files ?? []))}
-          className="mt-1 block w-full text-sm"
+          className="hidden"
         />
-        {photos.length > 0 && (
-          <p className="mt-1 text-xs text-slate-500">{photos.length} photo(s) selected</p>
+        <button
+          type="button"
+          onClick={() => photoInputRef.current?.click()}
+          className="mt-2 flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-8 text-slate-500 transition-colors hover:border-brand-orange/50 hover:bg-orange-50/50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-orange-500/5"
+        >
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z" />
+            <circle cx="12" cy="13" r="4" />
+          </svg>
+          <span className="text-sm font-medium">{photos.length > 0 ? `${photos.length} photo(s) selected` : "Tap to add photos"}</span>
+        </button>
+        {photoPreviews.length > 0 && (
+          <div className="mt-3 grid grid-cols-4 gap-2">
+            {photoPreviews.map((src, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img key={i} src={src} alt="" className="aspect-square animate-scale-in rounded-lg object-cover" />
+            ))}
+          </div>
         )}
-      </div>
+      </Card>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-700">Voice summary</label>
-        <div className="mt-1 flex items-center gap-3">
+      <Card className="p-5">
+        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Voice summary</label>
+        <div className="mt-3 flex flex-col items-center gap-3">
           {recorderState !== "recording" ? (
             <button
               type="button"
               onClick={startRecording}
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm hover:bg-slate-100"
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-navy text-white shadow-lg shadow-slate-900/20 transition-transform active:scale-95 dark:bg-brand-orange"
             >
-              🎙 Record
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="9" y="2" width="6" height="12" rx="3" />
+                <path d="M5 10a7 7 0 0 0 14 0M12 19v3" />
+              </svg>
             </button>
           ) : (
             <button
               type="button"
               onClick={stopRecording}
-              className="rounded-md border border-red-300 bg-red-50 px-3 py-2 text-sm text-red-700 hover:bg-red-100"
+              className="flex h-16 w-16 items-center justify-center rounded-full bg-red-600 text-white shadow-lg shadow-red-600/30 transition-transform active:scale-95"
+              style={{ animation: "pulse-ring 1.5s ease-out infinite" }}
             >
-              ■ Stop
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+              <style>{`@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgb(220 38 38 / 0.4);} 100% { box-shadow: 0 0 0 14px rgb(220 38 38 / 0);} }`}</style>
             </button>
           )}
-          {recorderState === "recorded" && (
-            <span className="text-xs text-emerald-600">Voice note captured</span>
-          )}
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {recorderState === "recording" ? "Recording… tap to stop" : recorderState === "recorded" ? "Voice note captured ✓" : "Tap to record"}
+          </p>
         </div>
-      </div>
+      </Card>
 
-      <div>
-        <label className="block text-sm font-medium text-slate-700">Documents (optional)</label>
-        <input
-          type="file"
-          multiple
-          onChange={(e) => setDocuments(Array.from(e.target.files ?? []))}
-          className="mt-1 block w-full text-sm"
-        />
-      </div>
+      <Card className="p-5">
+        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Documents (optional)</label>
+        <input ref={docInputRef} type="file" multiple onChange={(e) => setDocuments(Array.from(e.target.files ?? []))} className="hidden" />
+        <button
+          type="button"
+          onClick={() => docInputRef.current?.click()}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border-2 border-dashed border-slate-200 py-4 text-sm text-slate-500 transition-colors hover:border-brand-orange/50 hover:bg-orange-50/50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-orange-500/5"
+        >
+          {documents.length > 0 ? `${documents.length} document(s) selected` : "Tap to attach documents"}
+        </button>
+      </Card>
 
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
 
-      <button
-        type="submit"
-        disabled={submitting}
-        className="w-full rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-      >
+      <Button type="submit" loading={submitting} className="w-full" size="lg">
         {submitting ? "Saving…" : "Save entry"}
-      </button>
+      </Button>
     </form>
   );
 }

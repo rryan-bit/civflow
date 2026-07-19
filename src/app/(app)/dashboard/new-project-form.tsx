@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
 
 export default function NewProjectForm() {
   const router = useRouter();
@@ -52,30 +53,26 @@ export default function NewProjectForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-2 space-y-3">
+    <form onSubmit={handleSubmit} className="mt-3 space-y-3">
       <input
         type="text"
         placeholder="Project name"
         required
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+        className="field"
       />
       <input
         type="text"
         placeholder="Site address (optional)"
         value={siteAddress}
         onChange={(e) => setSiteAddress(e.target.value)}
-        className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-slate-500 focus:outline-none"
+        className="field"
       />
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <button
-        type="submit"
-        disabled={loading}
-        className="rounded-md bg-slate-900 px-3 py-2 text-sm font-medium text-white hover:bg-slate-800 disabled:opacity-50"
-      >
+      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      <Button type="submit" loading={loading} className="w-full">
         {loading ? "Creating…" : "Create project"}
-      </button>
+      </Button>
     </form>
   );
 }

@@ -14,7 +14,7 @@ export default function SignOutButton() {
         router.push("/login");
         router.refresh();
       }}
-      className="rounded-md border border-slate-300 px-2 py-1 text-xs hover:bg-slate-100"
+      className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
     >
       Sign out
     </button>

@@ -1,26 +1,267 @@
 @import "tailwindcss";
 
+/* Class-based dark mode: a `dark` class on <html> (set by the inline script
+   in layout.tsx, before paint, based on saved preference or system setting)
+   activates every `dark:` utility below. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
+  /* The page itself is pure white now (was a light grey, #f8fafc) — surfaces
+     are told apart by a soft tint + radius instead of a border/shadow
+     "box," so the page needs to be the lightest thing on screen for that
+     tint to read at all. */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a;
+
+  /* Brand palette */
+  --color-brand-navy: #0f172a;
+  --color-brand-steel: #1e3a5f;
+  --color-brand-orange: #f97316;
+  --color-brand-orange-light: #fb923c;
+  --color-brand-success: #22c55e;
+  --color-brand-warning: #eab308;
+  --color-brand-danger: #ef4444;
+
+  /* Card surface tint — this, not a border, is what separates a panel from
+     the page now. */
+  --color-surface: #f8fafc;
+  --color-surface-hover: #f1f5f9;
+
+  /* Shadow is reserved for things that are genuinely floating above the
+     page (dropdowns, modals) — flat panels don't get one at rest. */
+  --shadow-card: none;
+  --shadow-card-hover: 0 1px 2px 0 rgb(15 23 42 / 0.04);
+  --shadow-elevated: 0 12px 32px -8px rgb(15 23 42 / 0.14), 0 4px 12px -4px rgb(15 23 42 / 0.08);
+}
+
+.dark {
+  --background: #0a0f1c;
+  --foreground: #f1f5f9;
+
+  --color-surface: #10182b;
+  --color-surface-hover: #16213a;
+
+  --shadow-card: none;
+  --shadow-card-hover: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-elevated: 0 16px 40px -8px rgb(0 0 0 / 0.5), 0 4px 16px -4px rgb(0 0 0 / 0.4);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --color-brand-navy: var(--color-brand-navy);
+  --color-brand-steel: var(--color-brand-steel);
+  --color-brand-orange: var(--color-brand-orange);
+  --color-brand-success: var(--color-brand-success);
+  --color-brand-warning: var(--color-brand-warning);
+  --color-brand-danger: var(--color-brand-danger);
+  --color-surface: var(--color-surface);
+  --color-surface-hover: var(--color-surface-hover);
+  --font-sans: "Inter var", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --animate-fade-in: fade-in 0.4s ease-out both;
+  --animate-slide-up: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-scale-in: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-shimmer: shimmer 1.8s ease-in-out infinite;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Safe-area insets — only matters in standalone/installed PWA mode on
+   notched/Dynamic-Island phones, where there's no browser chrome to absorb
+   them. Applied to the sticky app header (so it doesn't sit under the
+   notch) and as bottom padding on the page so nothing hides behind a home
+   indicator. */
+@supports (padding: max(0px)) {
+  .app-header-safe-area {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+  .app-bottom-safe-area {
+    padding-bottom: max(2rem, env(safe-area-inset-bottom));
   }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv11", "ss01", "cv01";
+}
+
+:root {
+  color-scheme: light;
+}
+.dark {
+  color-scheme: dark;
+}
+
+/* Refined focus ring — used app-wide instead of the harsh default outline */
+:focus-visible {
+  outline: 2px solid var(--color-brand-orange);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Slim, unobtrusive scrollbars that match the design language */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184 / 0.4) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: rgb(148 163 184 / 0.4);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgb(148 163 184 / 0.7);
+}
+
+/* Form controls don't inherit a background from the page, and Tailwind's
+   preflight makes their text color inherit — so without this, dark mode
+   text (light-colored, inherited) would land on a native white input
+   background and become unreadable. Set both explicitly, everywhere. */
+input,
+textarea,
+select {
+  background-color: #ffffff;
+  color: #0f172a; /* slate-900 */
+}
+
+.dark input,
+.dark textarea,
+.dark select {
+  background-color: #111827;
+  color: #f1f5f9; /* slate-100 */
+}
+
+/* Browser default placeholder color is a very low-contrast light grey —
+   override it everywhere so typed hints stay readable in both themes. */
+input::placeholder,
+textarea::placeholder {
+  color: #94a3b8; /* slate-400 */
+  opacity: 1;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b; /* slate-500 — dimmer against the dark input surface */
+  opacity: 1;
+}
+
+/* Shared form field style — soft tinted background instead of a hard
+   border (matches the flat surface language above), orange focus ring,
+   consistent across every form in the app. */
+.field {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  background: var(--color-surface);
+  padding: 0.55rem 0.8rem;
+  font-size: 0.875rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.field:focus {
+  outline: none;
+  background: #ffffff;
+  border-color: var(--color-brand-orange);
+  box-shadow: 0 0 0 3px rgb(249 115 22 / 0.15);
+}
+.dark .field:focus {
+  background: var(--color-surface-hover);
+}
+
+/* Shared surface classes so every card/panel in the app pulls from the same
+   design tokens rather than re-declaring shadow/radius/border utilities.
+   No border, no shadow at rest — a panel is told apart from the page by a
+   soft background tint and radius only, which is what actually reads as
+   "flat and modern" instead of "a box." Interactive panels get a slightly
+   deeper tint plus a whisper of shadow on hover, never a border. */
+.surface-card {
+  border-radius: 16px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition: background-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+.surface-card-interactive:hover {
+  background: var(--color-surface-hover);
+  box-shadow: var(--shadow-card-hover);
+  transform: translateY(-1px);
+}
+
+/* Skeleton loading shimmer */
+.skeleton {
+  background: linear-gradient(90deg, rgb(226 232 240 / 0.6) 25%, rgb(226 232 240 / 1) 37%, rgb(226 232 240 / 0.6) 63%);
+  background-size: 400% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: 8px;
+}
+.dark .skeleton {
+  background: linear-gradient(90deg, rgb(30 41 59 / 0.6) 25%, rgb(51 65 85 / 0.8) 37%, rgb(30 41 59 / 0.6) 63%);
+  background-size: 400% 100%;
+}
+
+/* Printed/saved-as-PDF reports should always be light and high-contrast,
+   regardless of which theme is active on screen — and shouldn't waste ink
+   on colored card backgrounds. Elements also marked `print:hidden` (nav,
+   buttons) are removed entirely via Tailwind's print variant. */
+@media print {
+  html,
+  body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+  * {
+    background-color: transparent !important;
+    color: #000 !important;
+    border-color: #ccc !important;
+    box-shadow: none !important;
+  }
 }
