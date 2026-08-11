@@ -57,8 +57,13 @@
   --color-brand-danger: var(--color-brand-danger);
   --color-surface: var(--color-surface);
   --color-surface-hover: var(--color-surface-hover);
+  --shadow-elevated: var(--shadow-elevated);
   --font-sans: "Inter var", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Self-hosted via @fontsource/space-grotesk (see layout.tsx) — headings
+     only, body copy stays on the system stack above. Exposed as a Tailwind
+     utility (font-display) for one-off use outside h1/h2/h3. */
+  --font-display: "Space Grotesk", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
   --animate-fade-in: fade-in 0.4s ease-out both;
   --animate-slide-up: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-scale-in: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
@@ -131,6 +136,16 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   font-feature-settings: "cv11", "ss01", "cv01";
+}
+
+/* Headings get a distinct display face so the app reads as designed rather
+   than default-system — body copy and UI chrome stay on the system stack
+   for maximum legibility and zero flash-of-unstyled-text risk. */
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
 
 :root {

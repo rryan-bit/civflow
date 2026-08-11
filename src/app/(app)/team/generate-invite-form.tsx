@@ -6,17 +6,18 @@ import { createClient } from "@/lib/supabase/client";
 import type { UserRole } from "@/types/database";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 
 export default function GenerateInviteForm() {
   const router = useRouter();
   const supabase = createClient();
+  const toast = useToast();
 
   const [role, setRole] = useState<UserRole>("supervisor");
   const [projectId, setProjectId] = useState("");
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
   const [link, setLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -31,11 +32,10 @@ export default function GenerateInviteForm() {
 
   async function handleGenerate() {
     if (role === "field_worker" && !projectId) {
-      setError("Pick which project this worker is joining.");
+      toast({ title: "Pick a project", description: "Pick which project this worker is joining.", variant: "error" });
       return;
     }
     setLoading(true);
-    setError(null);
     setLink(null);
 
     const {
@@ -45,7 +45,7 @@ export default function GenerateInviteForm() {
     const { data: profile } = await supabase.from("profiles").select("company_id").eq("id", user!.id).single();
 
     if (!profile?.company_id) {
-      setError("Your account has no company assigned.");
+      toast({ title: "Couldn't generate invite", description: "Your account has no company assigned.", variant: "error" });
       setLoading(false);
       return;
     }
@@ -64,11 +64,12 @@ export default function GenerateInviteForm() {
     setLoading(false);
 
     if (error || !data) {
-      setError(error?.message ?? "Couldn't create the invite.");
+      toast({ title: "Couldn't generate invite", description: error?.message ?? "Something went wrong — try again.", variant: "error" });
       return;
     }
 
     setLink(`${window.location.origin}/join/${data.token}`);
+    toast({ title: "Invite link generated", description: "Expires in 7 days, and can only be used once.", variant: "success" });
     router.refresh();
   }
 
@@ -117,8 +118,6 @@ export default function GenerateInviteForm() {
           own hours, and the ability to post photos and ask questions.
         </p>
       )}
-
-      {error && <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>}
 
       {link && (
         <div className="mt-3 flex animate-slide-up items-center gap-2">

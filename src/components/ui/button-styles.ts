@@ -22,10 +22,13 @@ const variants: Record<ButtonVariant, string> = {
   danger: "bg-red-600 text-white hover:bg-red-700",
 };
 
+// Full pill radius on every size — reads as more modern/friendly than the
+// boxier rounded-lg/xl corners the rest of the app's cards and inputs use,
+// and gives buttons a distinct silhouette so they're unmistakably tappable.
 const sizes: Record<ButtonSize, string> = {
-  sm: "rounded-lg px-3 py-1.5 text-xs",
-  md: "rounded-xl px-4 py-2 text-sm",
-  lg: "rounded-xl px-5 py-2.5 text-sm",
+  sm: "rounded-full px-3.5 py-1.5 text-xs",
+  md: "rounded-full px-5 py-2 text-sm",
+  lg: "rounded-full px-6 py-2.5 text-sm",
 };
 
 export function buttonStyles(variant: ButtonVariant = "primary", size: ButtonSize = "md", className = "") {

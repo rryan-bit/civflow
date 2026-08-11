@@ -6,6 +6,7 @@ import { DocumentAiUpload } from "./document-ai-upload";
 import { AddReminderForm } from "@/components/reminders/add-reminder-form";
 import { ReminderRow } from "@/components/reminders/reminder-row";
 import { StatCard } from "@/components/ui/stat-card";
+import { EmptyProjectsIllustration } from "@/components/ui/empty-projects-illustration";
 import { Card } from "@/components/ui/card";
 import { Badge, BadgeTone } from "@/components/ui/badge";
 import { getComplianceAlerts } from "@/lib/compliance";
@@ -522,7 +523,11 @@ export default async function DashboardPage() {
           })}
 
           {!projects?.length && (
-            <p className="text-sm text-slate-500 dark:text-slate-400">No projects yet — create your first one below.</p>
+            <Card className="p-8 text-center sm:col-span-2">
+              <EmptyProjectsIllustration className="mx-auto h-24 w-auto" />
+              <p className="mt-4 text-sm font-medium text-slate-700 dark:text-slate-300">No projects yet</p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Create your first one below to get started.</p>
+            </Card>
           )}
         </div>
       </section>

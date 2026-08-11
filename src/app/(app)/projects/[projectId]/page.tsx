@@ -11,6 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { buttonStyles } from "@/components/ui/button-styles";
 import { calculateEstimatedMargin } from "@/lib/financial-calcs";
+import { tileTint } from "@/lib/tile-tints";
 
 const RfiIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -405,10 +406,10 @@ export default async function ProjectPage({
 
       <h2 className="mt-8 text-sm font-semibold text-slate-700 dark:text-slate-300">Day-to-day</h2>
       <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {dayToDayModules.map((m) => (
+        {dayToDayModules.map((m, i) => (
           <Link key={m.href} href={m.href}>
             <Card interactive className="h-full p-4">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+              <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${tileTint(i)}`}>
                 {m.icon}
               </span>
               <p className="mt-2.5 text-sm font-medium text-slate-900 dark:text-slate-100">{m.label}</p>
@@ -420,10 +421,10 @@ export default async function ProjectPage({
 
       <h2 className="mt-8 text-sm font-semibold text-slate-700 dark:text-slate-300">Compliance &amp; quality</h2>
       <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {complianceModules.map((m) => (
+        {complianceModules.map((m, i) => (
           <Link key={m.href} href={m.href}>
             <Card interactive className="h-full p-4">
-              <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+              <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${tileTint(i + dayToDayModules.length)}`}>
                 {m.icon}
               </span>
               <p className="mt-2.5 text-sm font-medium text-slate-900 dark:text-slate-100">{m.label}</p>

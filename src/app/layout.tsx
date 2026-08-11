@@ -3,10 +3,20 @@ import Script from "next/script";
 import "./globals.css";
 import RegisterServiceWorker from "./register-sw";
 import OfflineBanner from "@/components/offline-banner";
+import { ToastProvider } from "@/components/ui/toast";
 
-// Deliberately using the system font stack (see globals.css) instead of
-// next/font/google — this is a field tool that should build and run without
-// depending on a Google Fonts fetch at build time.
+// Deliberately using the system font stack for body copy (see globals.css)
+// instead of next/font/google — this is a field tool that should build and
+// run without depending on a Google Fonts fetch at build time.
+//
+// Headings use Space Grotesk for a bit of character, but it's self-hosted
+// via @fontsource (static WOFF2 files shipped in the npm package itself,
+// pinned by version like any other dependency) rather than next/font/google
+// or a CDN link tag — so it still costs zero network requests at build or
+// runtime, same as the system stack.
+import "@fontsource/space-grotesk/500.css";
+import "@fontsource/space-grotesk/600.css";
+import "@fontsource/space-grotesk/700.css";
 
 export const metadata: Metadata = {
   title: "CivFlow — AI Site Diary Assistant",
@@ -66,7 +76,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         <RegisterServiceWorker />
         <OfflineBanner />
-        {children}
+        <ToastProvider>{children}</ToastProvider>
       </body>
     </html>
   );
