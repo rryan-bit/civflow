@@ -61,6 +61,20 @@ const THEME_INIT_SCRIPT = `
 })();
 `;
 
+// Same idea, for the app sidebar's fold state — reads the saved preference
+// before paint so a person who folded the sidebar doesn't see it flash
+// full-width for a frame on every page load. Kept in sync with the
+// collapse toggle in app-sidebar.tsx.
+const SIDEBAR_INIT_SCRIPT = `
+(function () {
+  try {
+    if (localStorage.getItem("civflow-sidebar-collapsed") === "1") {
+      document.documentElement.style.setProperty("--sidebar-w", "4.5rem");
+    }
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -71,6 +85,9 @@ export default function RootLayout({
       <head>
         <Script id="theme-init" strategy="beforeInteractive">
           {THEME_INIT_SCRIPT}
+        </Script>
+        <Script id="sidebar-init" strategy="beforeInteractive">
+          {SIDEBAR_INIT_SCRIPT}
         </Script>
       </head>
       <body className="min-h-full flex flex-col">

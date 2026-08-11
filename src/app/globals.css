@@ -32,6 +32,11 @@
   --shadow-card: none;
   --shadow-card-hover: 0 1px 2px 0 rgb(15 23 42 / 0.04);
   --shadow-elevated: 0 12px 32px -8px rgb(15 23 42 / 0.14), 0 4px 12px -4px rgb(15 23 42 / 0.08);
+
+  /* Default (expanded) app-sidebar width — overridden inline on <html> by
+     the blocking init script in layout.tsx before paint if the person has
+     previously folded it, so there's no flash on load. */
+  --sidebar-w: 16rem;
 }
 
 .dark {
