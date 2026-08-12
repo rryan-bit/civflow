@@ -315,7 +315,7 @@ const ACTION_TOOLS: {
         .select("id, client_name")
         .single();
       if (error || !data) return { error: error?.message ?? "Couldn't create the lead." };
-      return { label: data.client_name, href: "/leads", summary: `Added ${data.client_name} as a new lead.` };
+      return { label: data.client_name, href: `/leads/${data.id}`, summary: `Added ${data.client_name} as a new lead.` };
     },
   },
   {

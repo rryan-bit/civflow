@@ -149,7 +149,7 @@ export default async function CalendarPage() {
   }
   for (const l of leads ?? []) {
     if (!l.follow_up_date) continue;
-    items.push({ id: `lead-${l.id}`, type: "Lead follow-up", label: l.client_name, date: l.follow_up_date, href: "/leads" });
+    items.push({ id: `lead-${l.id}`, type: "Lead follow-up", label: l.client_name, date: l.follow_up_date, href: `/leads/${l.id}` });
   }
 
   items.sort((a, b) => a.date.localeCompare(b.date));

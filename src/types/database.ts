@@ -656,6 +656,22 @@ export type Lead = {
   created_at: string;
 };
 
+export type LeadNote = {
+  id: string;
+  lead_id: string;
+  body: string;
+  created_by: string | null;
+  created_at: string;
+};
+
+export type LeadFollowUp = {
+  id: string;
+  lead_id: string;
+  note: string | null;
+  created_by: string | null;
+  created_at: string;
+};
+
 export type NotificationLog = {
   id: string;
   company_id: string;
@@ -1337,6 +1353,26 @@ export type Database = {
           client_approval_token?: string;
           quote_accepted_at?: string | null;
           quote_accepted_name?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+        }
+      >;
+      lead_notes: TableDef<
+        LeadNote,
+        {
+          id?: string;
+          lead_id: string;
+          body: string;
+          created_by?: string | null;
+          created_at?: string;
+        }
+      >;
+      lead_follow_ups: TableDef<
+        LeadFollowUp,
+        {
+          id?: string;
+          lead_id: string;
+          note?: string | null;
           created_by?: string | null;
           created_at?: string;
         }

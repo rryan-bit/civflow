@@ -104,6 +104,8 @@ const MUST_DENY_FIELD_WORKERS = [
   "selection_options",
   "eot_claims",
   "milestone_dependencies",
+  "lead_notes",
+  "lead_follow_ups",
 ];
 
 interface MigrationFile {
