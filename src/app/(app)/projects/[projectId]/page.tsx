@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonStyles } from "@/components/ui/button-styles";
 import { calculateEstimatedMargin } from "@/lib/financial-calcs";
 import { tileTint } from "@/lib/tile-tints";
+import { ExpandableGrid } from "@/components/ui/expandable-grid";
 
 const RfiIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -326,12 +327,15 @@ export default async function ProjectPage({
       })
     : null;
 
+  // Ordered so the six things people actually touch day-to-day (hours,
+  // materials, money, safety, crew, chat) show up before the toggle,
+  // and the more episodic ones (created once, checked occasionally) sit
+  // behind "Show more" — see ExpandableGrid below.
   const dayToDayModules = [
-    { href: `/projects/${projectId}/rfis`, label: "RFIs", icon: <RfiIcon />, meta: openRfis ? `${openRfis} open` : "None open" },
-    { href: `/projects/${projectId}/variations`, label: "Variations", icon: <VariationIcon />, meta: openVariations ? `${openVariations} pending` : "None pending" },
-    { href: `/projects/${projectId}/materials`, label: "Materials & Deliveries", icon: <MaterialsIcon />, meta: flaggedMaterialsCount ? `${flaggedMaterialsCount} flagged` : "None flagged" },
     { href: `/projects/${projectId}/worker-hours`, label: "Worker Hours", icon: <WorkerHoursIcon />, meta: "Who worked, and when" },
-    { href: `/projects/${projectId}/documents`, label: "Documents", icon: <DocumentsIcon />, meta: documentsCount ? `${documentsCount} on file` : "None uploaded" },
+    { href: `/projects/${projectId}/materials`, label: "Materials & Deliveries", icon: <MaterialsIcon />, meta: flaggedMaterialsCount ? `${flaggedMaterialsCount} flagged` : "None flagged" },
+    { href: `/projects/${projectId}/financials`, label: "Financials & Schedule", icon: <FinancialsIcon />, meta: "Cost, billing & program status" },
+    { href: `/projects/${projectId}/safety`, label: "Safety", icon: <SafetyIcon />, meta: "Register & toolbox talks" },
     {
       href: `/projects/${projectId}/crew`,
       label: "Crew",
@@ -339,10 +343,11 @@ export default async function ProjectPage({
       meta: unansweredQuestionsCount ? `${unansweredQuestionsCount} question${unansweredQuestionsCount === 1 ? "" : "s"} waiting` : crewCount ? `${crewCount} assigned` : "None assigned",
     },
     { href: `/projects/${projectId}/chat`, label: "Chat", icon: <ChatIcon />, meta: "Message the team & subcontractors" },
+    { href: `/projects/${projectId}/rfis`, label: "RFIs", icon: <RfiIcon />, meta: openRfis ? `${openRfis} open` : "None open" },
+    { href: `/projects/${projectId}/variations`, label: "Variations", icon: <VariationIcon />, meta: openVariations ? `${openVariations} pending` : "None pending" },
+    { href: `/projects/${projectId}/documents`, label: "Documents", icon: <DocumentsIcon />, meta: documentsCount ? `${documentsCount} on file` : "None uploaded" },
     { href: `/projects/${projectId}/selections`, label: "Selections", icon: <SelectionIcon />, meta: selectionsAwaitingCount ? `${selectionsAwaitingCount} awaiting decision` : "None pending" },
     { href: `/projects/${projectId}/milestones`, label: "Milestones", icon: <MilestoneIcon />, meta: milestonesCount ? `${milestonesCount} tracked` : "None yet" },
-    { href: `/projects/${projectId}/financials`, label: "Financials & Schedule", icon: <FinancialsIcon />, meta: "Cost, billing & program status" },
-    { href: `/projects/${projectId}/safety`, label: "Safety", icon: <SafetyIcon />, meta: "Register & toolbox talks" },
     { href: `/projects/${projectId}/report`, label: "Client Report", icon: <ReportIcon />, meta: "Generate a report to send" },
   ];
 
@@ -405,33 +410,44 @@ export default async function ProjectPage({
       </div>
 
       <h2 className="mt-8 text-sm font-semibold text-slate-700 dark:text-slate-300">Day-to-day</h2>
-      <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {dayToDayModules.map((m, i) => (
-          <Link key={m.href} href={m.href}>
-            <Card interactive className="h-full p-4">
-              <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${tileTint(i)}`}>
-                {m.icon}
-              </span>
-              <p className="mt-2.5 text-sm font-medium text-slate-900 dark:text-slate-100">{m.label}</p>
-              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{m.meta}</p>
-            </Card>
-          </Link>
-        ))}
+      <div className="mt-2">
+        <ExpandableGrid visibleCount={6} gridClassName="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          {dayToDayModules.map((m, i) => (
+            <Link key={m.href} href={m.href}>
+              <Card interactive className="h-full p-4">
+                <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${tileTint(i)}`}>
+                  {m.icon}
+                </span>
+                <p className="mt-2.5 text-sm font-medium text-slate-900 dark:text-slate-100">{m.label}</p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{m.meta}</p>
+              </Card>
+            </Link>
+          ))}
+        </ExpandableGrid>
       </div>
 
-      <h2 className="mt-8 text-sm font-semibold text-slate-700 dark:text-slate-300">Compliance &amp; quality</h2>
-      <div className="mt-2 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-        {complianceModules.map((m, i) => (
-          <Link key={m.href} href={m.href}>
-            <Card interactive className="h-full p-4">
-              <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${tileTint(i + dayToDayModules.length)}`}>
-                {m.icon}
-              </span>
-              <p className="mt-2.5 text-sm font-medium text-slate-900 dark:text-slate-100">{m.label}</p>
-              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{m.meta}</p>
-            </Card>
-          </Link>
-        ))}
+      {/* Fully tucked away by default — these are specialised/episodic
+          compared to the day-to-day set above, so they don't need to
+          compete for attention until someone actually needs one. */}
+      <div className="mt-8">
+        <ExpandableGrid
+          visibleCount={0}
+          variant="row"
+          collapsedLabel="Compliance & quality"
+          gridClassName="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+        >
+          {complianceModules.map((m, i) => (
+            <Link key={m.href} href={m.href}>
+              <Card interactive className="h-full p-4">
+                <span className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${tileTint(i + dayToDayModules.length)}`}>
+                  {m.icon}
+                </span>
+                <p className="mt-2.5 text-sm font-medium text-slate-900 dark:text-slate-100">{m.label}</p>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{m.meta}</p>
+              </Card>
+            </Link>
+          ))}
+        </ExpandableGrid>
       </div>
       {isResidential && (
         <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">
