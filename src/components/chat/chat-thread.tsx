@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { EmptyState, EmptyIcons } from "@/components/ui/empty-state";
 
 export type ChatMessageItem = {
   id: string;
@@ -78,7 +79,7 @@ export function ChatThread({
             </div>
           ))
         ) : (
-          <p className="py-6 text-center text-sm text-slate-500 dark:text-slate-400">No messages yet — say hello.</p>
+          <EmptyState icon={EmptyIcons.message} title="No messages yet — say hello." className="py-6" />
         )}
       </div>
 

@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Worker, WorkerTimeEntry } from "@/types/database";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { EmptyState, EmptyIcons } from "@/components/ui/empty-state";
 
 function toDateInput(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -205,7 +206,7 @@ export function WorkerHoursPanel({
               </button>
             </div>
           ))}
-          {!entries.length && <p className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">No hours logged yet.</p>}
+          {!entries.length && <EmptyState icon={EmptyIcons.clock} title="No hours logged yet." className="px-4 py-8" />}
         </Card>
       </div>
     </div>

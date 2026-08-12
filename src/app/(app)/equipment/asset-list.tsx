@@ -7,6 +7,7 @@ import type { Asset, AssetCheckout, AssetOwnership, AssetStatus } from "@/types/
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EmptyState, EmptyIcons } from "@/components/ui/empty-state";
 
 const statusSelectColor: Record<AssetStatus, string> = {
   available: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400",
@@ -253,7 +254,7 @@ export function AssetList({
             </div>
           );
         })}
-        {!assets.length && <p className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">No tools or plant on the register yet.</p>}
+        {!assets.length && <EmptyState icon={EmptyIcons.tool} title="No tools or plant on the register yet." className="px-4 py-8" />}
       </Card>
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}

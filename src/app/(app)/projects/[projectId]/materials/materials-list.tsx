@@ -7,6 +7,7 @@ import type { Material, MaterialStatus } from "@/types/database";
 import { Card } from "@/components/ui/card";
 import { Badge, BadgeTone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EmptyState, EmptyIcons } from "@/components/ui/empty-state";
 
 const statusTone: Record<MaterialStatus, BadgeTone> = {
   ordered: "neutral",
@@ -186,7 +187,7 @@ export function MaterialsList({ projectId, materials }: { projectId: string; mat
             )}
           </div>
         ))}
-        {!materials.length && <p className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">No materials logged yet.</p>}
+        {!materials.length && <EmptyState icon={EmptyIcons.package} title="No materials logged yet." className="px-4 py-8" />}
       </Card>
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}

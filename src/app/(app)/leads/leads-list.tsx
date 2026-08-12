@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Badge, BadgeTone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { QuoteApprovalLink } from "./quote-approval-link";
+import { EmptyState, EmptyIcons } from "@/components/ui/empty-state";
 
 const statusTone: Record<LeadStatus, BadgeTone> = {
   enquiry: "neutral",
@@ -301,7 +302,7 @@ export function LeadsList({ companyId, leads }: { companyId: string; leads: Lead
             )}
           </div>
         ))}
-        {!leads.length && <p className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">No leads yet.</p>}
+        {!leads.length && <EmptyState icon={EmptyIcons.users} title="No leads yet." className="px-4 py-8" />}
       </Card>
 
       {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}

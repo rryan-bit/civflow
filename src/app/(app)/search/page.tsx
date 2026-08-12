@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { Card } from "@/components/ui/card";
 import { Badge, BadgeTone } from "@/components/ui/badge";
+import { EmptyState, EmptyIcons } from "@/components/ui/empty-state";
 
 type Result = {
   type: "Project" | "RFI" | "Variation" | "Milestone" | "Diary entry";
@@ -102,7 +103,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
             <Badge tone={typeTone[r.type]} className="shrink-0">{r.type}</Badge>
           </Link>
         ))}
-        {!results.length && <p className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">No matches found.</p>}
+        {!results.length && <EmptyState icon={EmptyIcons.search} title="No matches found." className="px-4 py-8" />}
       </Card>
     </div>
   );

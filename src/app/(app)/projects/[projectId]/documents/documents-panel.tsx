@@ -7,6 +7,7 @@ import type { DocumentCategory, ProjectDocument } from "@/types/database";
 import { Card } from "@/components/ui/card";
 import { Badge, BadgeTone } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { EmptyState, EmptyIcons } from "@/components/ui/empty-state";
 
 const categoryTone: Record<DocumentCategory, BadgeTone> = {
   contract: "blue",
@@ -142,7 +143,7 @@ export function DocumentsPanel({ projectId, documents }: { projectId: string; do
             </div>
           </div>
         ))}
-        {!documents.length && <p className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">No documents uploaded yet.</p>}
+        {!documents.length && <EmptyState icon={EmptyIcons.file} title="No documents uploaded yet." className="px-4 py-8" />}
       </Card>
 
       <Card className="p-5">

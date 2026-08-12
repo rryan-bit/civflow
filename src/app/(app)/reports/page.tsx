@@ -5,6 +5,7 @@ import { getPortfolioRows } from "@/lib/portfolio-report";
 import { PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge, BadgeTone } from "@/components/ui/badge";
+import { EmptyState, EmptyIcons } from "@/components/ui/empty-state";
 
 const statusTone: Record<string, BadgeTone> = {
   active: "emerald",
@@ -122,7 +123,7 @@ export default async function ReportsPage() {
             ))}
           </tbody>
         </table>
-        {!rows.length && <p className="p-5 text-sm text-slate-500 dark:text-slate-400">No projects yet.</p>}
+        {!rows.length && <EmptyState icon={EmptyIcons.building} title="No projects yet." className="p-5" />}
       </Card>
     </div>
   );

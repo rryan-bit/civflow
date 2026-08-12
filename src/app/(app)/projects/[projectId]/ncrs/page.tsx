@@ -5,6 +5,7 @@ import { BackLink, PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge, BadgeTone } from "@/components/ui/badge";
 import { buttonStyles } from "@/components/ui/button-styles";
+import { EmptyState, EmptyIcons } from "@/components/ui/empty-state";
 
 const statusTone: Record<string, BadgeTone> = {
   open: "red",
@@ -58,9 +59,7 @@ export default async function NcrsPage({ params }: { params: Promise<{ projectId
           </Link>
         ))}
         {!ncrs?.length && (
-          <p className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">
-            No non-conformance reports recorded for this project yet.
-          </p>
+          <EmptyState icon={EmptyIcons.alert} title="No non-conformance reports recorded for this project yet." className="px-4 py-8" />
         )}
       </Card>
     </div>

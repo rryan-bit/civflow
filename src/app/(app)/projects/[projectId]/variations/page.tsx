@@ -5,6 +5,7 @@ import { BackLink, PageHeader } from "@/components/ui/page-header";
 import { Card } from "@/components/ui/card";
 import { Badge, BadgeTone } from "@/components/ui/badge";
 import { buttonStyles } from "@/components/ui/button-styles";
+import { EmptyState, EmptyIcons } from "@/components/ui/empty-state";
 
 const statusTone: Record<string, BadgeTone> = {
   draft: "neutral",
@@ -69,7 +70,7 @@ export default async function VariationsPage({ params }: { params: Promise<{ pro
           </Link>
         ))}
         {!variations?.length && (
-          <p className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">No variations yet on this project.</p>
+          <EmptyState icon={EmptyIcons.edit} title="No variations yet on this project." className="px-4 py-8" />
         )}
       </Card>
     </div>

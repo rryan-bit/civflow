@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/client";
 import type { Milestone, MilestoneStatus } from "@/types/database";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { EmptyState, EmptyIcons } from "@/components/ui/empty-state";
 
 const statusColor: Record<MilestoneStatus, string> = {
   pending: "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400",
@@ -180,7 +181,7 @@ export function MilestonesList({
           </div>
         ))}
         {!milestones.length && (
-          <p className="px-4 py-8 text-center text-sm text-slate-500 dark:text-slate-400">No milestones yet on this project.</p>
+          <EmptyState icon={EmptyIcons.flag} title="No milestones yet on this project." className="px-4 py-8" />
         )}
       </Card>
     </div>

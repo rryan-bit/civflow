@@ -14,7 +14,7 @@ export async function GET(request: Request) {
   cookieStore.delete("xero_oauth_state");
 
   if (!code || !state || !expectedState || state !== expectedState) {
-    return NextResponse.redirect(new URL("/compliance?xero_error=state_mismatch", request.url));
+    return NextResponse.redirect(new URL("/settings?xero_error=state_mismatch", request.url));
   }
 
   const supabase = await createClient();
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
 
   const { data: profile } = await supabase.from("profiles").select("role, company_id").eq("id", user.id).single();
   if (profile?.role !== "admin" || !profile.company_id) {
-    return NextResponse.redirect(new URL("/compliance?xero_error=not_admin", request.url));
+    return NextResponse.redirect(new URL("/settings?xero_error=not_admin", request.url));
   }
 
   try {
@@ -33,7 +33,7 @@ export async function GET(request: Request) {
     const connections = await getXeroConnections(tokens.access_token);
     const tenant = connections.find((c) => c.tenantType === "ORGANISATION") ?? connections[0];
     if (!tenant) {
-      return NextResponse.redirect(new URL("/compliance?xero_error=no_organisation", request.url));
+      return NextResponse.redirect(new URL("/settings?xero_error=no_organisation", request.url));
     }
 
     const admin = createAdminClient();
@@ -53,9 +53,9 @@ export async function GET(request: Request) {
     );
     if (error) throw new Error(error.message);
 
-    return NextResponse.redirect(new URL("/compliance?xero_connected=1", request.url));
+    return NextResponse.redirect(new URL("/settings?xero_connected=1", request.url));
   } catch (err) {
     console.error("Xero OAuth callback failed:", err);
-    return NextResponse.redirect(new URL("/compliance?xero_error=exchange_failed", request.url));
+    return NextResponse.redirect(new URL("/settings?xero_error=exchange_failed", request.url));
   }
 }
