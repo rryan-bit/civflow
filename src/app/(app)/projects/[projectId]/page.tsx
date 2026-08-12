@@ -411,7 +411,7 @@ export default async function ProjectPage({
 
       <h2 className="mt-8 text-sm font-semibold text-slate-700 dark:text-slate-300">Day-to-day</h2>
       <div className="mt-2">
-        <ExpandableGrid visibleCount={6} gridClassName="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <ExpandableGrid visibleCount={5} gridClassName="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {dayToDayModules.map((m, i) => (
             <Link key={m.href} href={m.href}>
               <Card interactive className="h-full p-4">
@@ -432,7 +432,6 @@ export default async function ProjectPage({
       <div className="mt-8">
         <ExpandableGrid
           visibleCount={0}
-          variant="row"
           collapsedLabel="Compliance & quality"
           gridClassName="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
         >

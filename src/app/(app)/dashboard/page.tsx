@@ -318,24 +318,24 @@ export default async function DashboardPage() {
       <section className="mt-10">
         <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Overview</h2>
         <Card className="mt-3 p-6">
-          {/* Six most useful at a glance up front — orientation (active
-              projects), the two most universally actionable warnings
-              (today's entry, safety), and money. Everything else is a real
-              number that matters sometimes, not all the time, so it's one
-              click away instead of competing for attention by default. */}
-          <ExpandableGrid visibleCount={6} gridClassName="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
-            <StatCard label="Active projects" value={activeProjects.length} icon={<CalendarIcon />} />
-            <StatCard label="Need today's entry" value={needsAttention.length} icon={<AlertIcon />} tone="warning" />
+          {/* Anything with a notification or that needs action (danger/warning
+              tone) always shows — never folded, regardless of count. Danger
+              (real risk) leads, then warning (needs attention soon), then
+              plain orientation numbers fill out the rest of the 8 and are
+              the only ones that ever get tucked behind "Show more". */}
+          <ExpandableGrid visibleCount={8} gridClassName="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
             <StatCard label="Safety flags" value={safetyFlags ?? 0} icon={<ShieldIcon />} tone="danger" />
-            <StatCard label="Payment claims awaiting" value={awaitingPaymentClaims ?? 0} icon={<FileIcon />} tone="warning" />
-            <StatCard label="Entries this week" value={entriesThisWeek} icon={<FileIcon />} />
-            <StatCard label="Awaiting review" value={entriesInReview} icon={<ClockIcon />} tone="warning" />
-            <StatCard label="Open RFIs" value={openRfis ?? 0} icon={<FileIcon />} />
-            <StatCard label="Pending variations" value={pendingVariations ?? 0} icon={<FileIcon />} />
             {!isResidential && <StatCard label="Open Directions to Rectify" value={openDtrCount ?? 0} icon={<AlertIcon />} tone="danger" />}
             {!isResidential && <StatCard label="Open NCRs" value={openNcrCount ?? 0} icon={<AlertIcon />} tone="danger" />}
             <StatCard label="Deliveries flagged" value={flaggedMaterialsCount ?? 0} icon={<AlertIcon />} tone="danger" />
             <StatCard label="Equipment overdue" value={overdueEquipmentCount ?? 0} icon={<AlertIcon />} tone="danger" />
+            <StatCard label="Awaiting review" value={entriesInReview} icon={<ClockIcon />} tone="warning" />
+            <StatCard label="Need today's entry" value={needsAttention.length} icon={<AlertIcon />} tone="warning" />
+            <StatCard label="Payment claims awaiting" value={awaitingPaymentClaims ?? 0} icon={<FileIcon />} tone="warning" />
+            <StatCard label="Active projects" value={activeProjects.length} icon={<CalendarIcon />} />
+            <StatCard label="Entries this week" value={entriesThisWeek} icon={<FileIcon />} />
+            <StatCard label="Open RFIs" value={openRfis ?? 0} icon={<FileIcon />} />
+            <StatCard label="Pending variations" value={pendingVariations ?? 0} icon={<FileIcon />} />
             <StatCard label="Open leads" value={openLeadsCount ?? 0} icon={<FileIcon />} />
           </ExpandableGrid>
 
