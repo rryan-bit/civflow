@@ -1,6 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database";
-import { daysBetween } from "@/lib/dates";
+import { daysBetween, addDaysToDate } from "@/lib/dates";
 import { checkDepositCap } from "@/lib/financial-calcs";
 
 // Accepts either the cookie-based SSR client (normal page/API-route
@@ -14,6 +14,11 @@ export type ComplianceAlert = {
   severity: ComplianceSeverity;
   message: string;
   href: string;
+  /** Unset for company-wide alerts (licence, MFR) that aren't tied to a
+   * single project — set on everything else so callers can group by
+   * project (see the Compliance page's "by project" breakdown). */
+  projectId?: string;
+  projectName?: string;
 };
 
 /**
@@ -81,6 +86,8 @@ export async function getComplianceAlerts(
         severity: "red",
         message: `${p.name}: deposit is ${percent.toFixed(1)}% of the contract — over the ${capRate}% cap for domestic building contracts at this value (QBCC Act Sch 1B).`,
         href: `/projects/${p.id}/financials`,
+        projectId: p.id,
+        projectName: p.name,
       });
     }
   }
@@ -97,6 +104,8 @@ export async function getComplianceAlerts(
         severity: "amber",
         message: `${p.name}: Home Warranty Insurance premium not yet marked as paid — mandatory on residential contracts over $3,300, due within 10 business days of signing.`,
         href: `/projects/${p.id}/financials`,
+        projectId: p.id,
+        projectName: p.name,
       });
     }
   }
@@ -117,12 +126,16 @@ export async function getComplianceAlerts(
         severity: "red",
         message: `${projectName(d.project_id)}: Direction to Rectify overdue by ${Math.abs(days)}d — "${d.description}".`,
         href: `/projects/${d.project_id}/directions-to-rectify/${d.id}`,
+        projectId: d.project_id,
+        projectName: projectName(d.project_id),
       });
     } else if (days <= 7) {
       alerts.push({
         severity: "amber",
         message: `${projectName(d.project_id)}: Direction to Rectify due in ${days}d — "${d.description}".`,
         href: `/projects/${d.project_id}/directions-to-rectify/${d.id}`,
+        projectId: d.project_id,
+        projectName: projectName(d.project_id),
       });
     }
   }
@@ -145,6 +158,8 @@ export async function getComplianceAlerts(
         severity: "amber",
         message: `${projectName(c.project_id)}: payment claim ${claimLabel} for $${c.amount_claimed.toLocaleString()} has no BIF Act supporting statement recorded yet.`,
         href: `/projects/${c.project_id}/payment-claims/${c.id}`,
+        projectId: c.project_id,
+        projectName: projectName(c.project_id),
       });
     }
 
@@ -158,12 +173,16 @@ export async function getComplianceAlerts(
           severity: "red",
           message: `${projectName(c.project_id)}: ${claimLabel} for $${c.amount_claimed.toLocaleString()} is ${Math.abs(days)}d overdue — consider escalating to adjudication under the BIF Act.`,
           href: `/projects/${c.project_id}/payment-claims/${c.id}`,
+          projectId: c.project_id,
+          projectName: projectName(c.project_id),
         });
       } else if (days <= 3) {
         alerts.push({
           severity: "amber",
           message: `${projectName(c.project_id)}: ${claimLabel} for $${c.amount_claimed.toLocaleString()} is due in ${days}d.`,
           href: `/projects/${c.project_id}/payment-claims/${c.id}`,
+          projectId: c.project_id,
+          projectName: projectName(c.project_id),
         });
       }
     }
@@ -187,6 +206,8 @@ export async function getComplianceAlerts(
       severity: "red",
       message: `${projectName(v.project_id)}: work has started on "${v.title}"${costText} with no client sign-off recorded — this cost may not be recoverable if disputed.`,
       href: `/projects/${v.project_id}/variations/${v.id}`,
+      projectId: v.project_id,
+      projectName: projectName(v.project_id),
     });
   }
 
@@ -208,6 +229,8 @@ export async function getComplianceAlerts(
         severity: "amber",
         message: `${projectName(s.project_id)}: retention for ${s.company_name} hasn't been released, ${Math.abs(days)}d since completion.`,
         href: `/projects/${s.project_id}/subcontractors/${s.id}`,
+        projectId: s.project_id,
+        projectName: projectName(s.project_id),
       });
     }
   }
@@ -230,12 +253,16 @@ export async function getComplianceAlerts(
           severity: "red",
           message: `${projectName(s.project_id)}: ${s.company_name}'s insurance expired ${Math.abs(days)}d ago.`,
           href: `/projects/${s.project_id}/subcontractors/${s.id}`,
+          projectId: s.project_id,
+          projectName: projectName(s.project_id),
         });
       } else if (days <= 30) {
         alerts.push({
           severity: "amber",
           message: `${projectName(s.project_id)}: ${s.company_name}'s insurance expires in ${days}d.`,
           href: `/projects/${s.project_id}/subcontractors/${s.id}`,
+          projectId: s.project_id,
+          projectName: projectName(s.project_id),
         });
       }
     }
@@ -246,12 +273,16 @@ export async function getComplianceAlerts(
           severity: "red",
           message: `${projectName(s.project_id)}: ${s.company_name}'s licence expired ${Math.abs(days)}d ago.`,
           href: `/projects/${s.project_id}/subcontractors/${s.id}`,
+          projectId: s.project_id,
+          projectName: projectName(s.project_id),
         });
       } else if (days <= 30) {
         alerts.push({
           severity: "amber",
           message: `${projectName(s.project_id)}: ${s.company_name}'s licence expires in ${days}d.`,
           href: `/projects/${s.project_id}/subcontractors/${s.id}`,
+          projectId: s.project_id,
+          projectName: projectName(s.project_id),
         });
       }
     }
@@ -276,12 +307,16 @@ export async function getComplianceAlerts(
         severity: "red",
         message: `${projectName(s.project_id)}: selection "${s.category}" is ${Math.abs(days)}d overdue for a client decision.`,
         href: `/projects/${s.project_id}/selections/${s.id}`,
+        projectId: s.project_id,
+        projectName: projectName(s.project_id),
       });
     } else if (days <= 7) {
       alerts.push({
         severity: "amber",
         message: `${projectName(s.project_id)}: selection "${s.category}" is due for a client decision in ${days}d.`,
         href: `/projects/${s.project_id}/selections/${s.id}`,
+        projectId: s.project_id,
+        projectName: projectName(s.project_id),
       });
     }
   }
@@ -303,15 +338,110 @@ export async function getComplianceAlerts(
         severity: "red",
         message: `${projectName(c.project_id)}: EOT notice for "${c.title}" is ${Math.abs(days)}d overdue — the right to claim this extension may be at risk.`,
         href: `/projects/${c.project_id}/eot-claims/${c.id}`,
+        projectId: c.project_id,
+        projectName: projectName(c.project_id),
       });
     } else if (days <= 3) {
       alerts.push({
         severity: "amber",
         message: `${projectName(c.project_id)}: EOT notice for "${c.title}" is due in ${days}d.`,
         href: `/projects/${c.project_id}/eot-claims/${c.id}`,
+        projectId: c.project_id,
+        projectName: projectName(c.project_id),
       });
     }
   }
 
   return alerts;
+}
+
+/**
+ * The full "Project health" picture — everything from getComplianceAlerts,
+ * plus three more operational risks that aren't compliance per se but
+ * belong in the same "things that need attention" feed: a project's
+ * schedule forecast slipping past its contracted completion date, its
+ * defects liability period closing within 30 days, and an active project
+ * with no site diary entry logged today. Used by both the dashboard's
+ * simplified notification feed and the Compliance page's full breakdown by
+ * project, so the two can never drift out of sync with each other.
+ */
+export async function getProjectHealthAlerts(
+  supabase: SupabaseServerClient,
+  companyId: string | null
+): Promise<ComplianceAlert[]> {
+  const complianceAlerts = await getComplianceAlerts(supabase, companyId);
+  if (!companyId) return complianceAlerts;
+
+  const today = new Date().toISOString().slice(0, 10);
+
+  const [{ data: projects }, { data: variations }, { data: entries }] = await Promise.all([
+    supabase
+      .from("projects")
+      .select("id, name, status, contracted_completion_date, practical_completion_date, defects_liability_end_date")
+      .eq("company_id", companyId)
+      .eq("status", "active"),
+    supabase.from("variations").select("project_id, time_impact_days").eq("status", "approved"),
+    supabase.from("diary_entries").select("project_id, entry_date"),
+  ]);
+
+  const activeProjects = projects ?? [];
+  const projectIds = new Set(activeProjects.map((p) => p.id));
+
+  const approvedDaysByProject = new Map<string, number>();
+  for (const v of variations ?? []) {
+    if (!projectIds.has(v.project_id)) continue;
+    approvedDaysByProject.set(v.project_id, (approvedDaysByProject.get(v.project_id) ?? 0) + (v.time_impact_days ?? 0));
+  }
+
+  const lastEntryDateByProject = new Map<string, string>();
+  for (const e of entries ?? []) {
+    if (!projectIds.has(e.project_id)) continue;
+    const existing = lastEntryDateByProject.get(e.project_id);
+    if (!existing || e.entry_date > existing) lastEntryDateByProject.set(e.project_id, e.entry_date);
+  }
+
+  const operationalAlerts: ComplianceAlert[] = [];
+
+  for (const p of activeProjects) {
+    if (p.contracted_completion_date && !p.practical_completion_date) {
+      const approvedDays = approvedDaysByProject.get(p.id) ?? 0;
+      const forecast = addDaysToDate(p.contracted_completion_date, approvedDays);
+      if (forecast < today) {
+        operationalAlerts.push({
+          severity: "red",
+          message: `${p.name} is forecast past its contracted completion date — review schedule.`,
+          href: `/projects/${p.id}/financials`,
+          projectId: p.id,
+          projectName: p.name,
+        });
+      }
+    }
+
+    if (p.defects_liability_end_date) {
+      const days = daysBetween(p.defects_liability_end_date);
+      if (days >= 0 && days <= 30) {
+        operationalAlerts.push({
+          severity: "amber",
+          message: `${p.name}'s defects liability period ends within 30 days — review defects.`,
+          href: `/projects/${p.id}/practical-completion`,
+          projectId: p.id,
+          projectName: p.name,
+        });
+      }
+    }
+
+    if (lastEntryDateByProject.get(p.id) !== today) {
+      operationalAlerts.push({
+        severity: "amber",
+        message: `${p.name} hasn't had a diary entry logged today — log one now.`,
+        href: `/projects/${p.id}/new-entry`,
+        projectId: p.id,
+        projectName: p.name,
+      });
+    }
+  }
+
+  return [...complianceAlerts, ...operationalAlerts].sort((a, b) =>
+    a.severity === b.severity ? 0 : a.severity === "red" ? -1 : 1
+  );
 }

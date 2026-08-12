@@ -7,7 +7,7 @@ import { ProfileLicenceForm } from "./profile-licence-form";
 import { CompanyTypeForm } from "./company-type-form";
 import { CompanyBrandingForm } from "./company-branding-form";
 import { XeroIntegrationCard } from "./xero-integration-card";
-import { getComplianceAlerts } from "@/lib/compliance";
+import { getProjectHealthAlerts, type ComplianceAlert } from "@/lib/compliance";
 import { isXeroConfigured } from "@/lib/xero";
 
 function daysUntil(dateStr: string | null): number | null {
@@ -58,8 +58,26 @@ export default async function CompliancePage({
 
   const isAdmin = profile?.role === "admin";
   const { data: xeroStatus } = isAdmin ? await supabase.rpc("get_xero_connection_status") : { data: null };
-  const alerts = await getComplianceAlerts(supabase, profile?.company_id ?? null);
-  const sortedAlerts = [...alerts].sort((a, b) => (a.severity === b.severity ? 0 : a.severity === "red" ? -1 : 1));
+  const alerts = await getProjectHealthAlerts(supabase, profile?.company_id ?? null);
+
+  // Split into company-wide items (licence/MFR — not tied to a project) and
+  // everything else, grouped by the project it's actually about. This is
+  // the "see it broken down by project" detail view the dashboard's simple
+  // notification list links out to.
+  const companyAlerts = alerts.filter((a) => !a.projectId);
+  const projectGroups = new Map<string, { name: string; alerts: ComplianceAlert[] }>();
+  for (const a of alerts) {
+    if (!a.projectId) continue;
+    const group = projectGroups.get(a.projectId) ?? { name: a.projectName ?? "Project", alerts: [] };
+    group.alerts.push(a);
+    projectGroups.set(a.projectId, group);
+  }
+  const sortedProjectGroups = [...projectGroups.entries()].sort(([, a], [, b]) => {
+    const aRed = a.alerts.filter((x) => x.severity === "red").length;
+    const bRed = b.alerts.filter((x) => x.severity === "red").length;
+    if (aRed !== bRed) return bRed - aRed;
+    return b.alerts.length - a.alerts.length;
+  });
 
   return (
     <div className="mx-auto max-w-2xl animate-fade-in">
@@ -70,28 +88,65 @@ export default async function CompliancePage({
       </p>
 
       <Card className="mt-4 p-5">
-        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Compliance health — all active projects</h2>
+        <h2 className="text-sm font-semibold text-slate-700 dark:text-slate-300">Project health — everything flagged</h2>
         <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
           Computed from what&apos;s actually recorded in CivFlow: overdue Directions to Rectify, payment claims
           missing a BIF Act supporting statement or past their due date, deposits over the statutory cap (10% under
-          $20,000, 5% at or above), unpaid Home Warranty Insurance premiums, unreleased retention, and expiring
-          licences/MFR reporting. A tracking aid, not a compliance guarantee.
+          $20,000, 5% at or above), unpaid Home Warranty Insurance premiums, unreleased retention, expiring
+          licences/MFR reporting, plus operational risks like schedule slippage, defects liability windows closing,
+          and projects missing today&apos;s diary entry. A tracking aid, not a compliance guarantee.
         </p>
-        {sortedAlerts.length > 0 ? (
-          <ul className="mt-3 space-y-2">
-            {sortedAlerts.map((alert, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm">
-                <Badge tone={alert.severity === "red" ? "red" : "amber"} className="mt-0.5 shrink-0">
-                  {alert.severity === "red" ? "action needed" : "watch"}
-                </Badge>
-                <Link href={alert.href} className="text-slate-700 hover:underline dark:text-slate-300">
-                  {alert.message}
-                </Link>
-              </li>
+
+        {companyAlerts.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">Company-wide</h3>
+            <ul className="mt-2 space-y-2">
+              {companyAlerts.map((alert, i) => (
+                <li key={i} className="flex items-start gap-2 text-sm">
+                  <Badge tone={alert.severity === "red" ? "red" : "amber"} className="mt-0.5 shrink-0">
+                    {alert.severity === "red" ? "action needed" : "watch"}
+                  </Badge>
+                  <Link href={alert.href} className="text-slate-700 hover:underline dark:text-slate-300">
+                    {alert.message}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {sortedProjectGroups.length > 0 ? (
+          <div className="mt-4 space-y-4">
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">By project</h3>
+            {sortedProjectGroups.map(([projectId, group]) => (
+              <div key={projectId} className="rounded-2xl bg-surface p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <Link href={`/projects/${projectId}`} className="text-sm font-medium text-slate-900 hover:underline dark:text-slate-100">
+                    {group.name}
+                  </Link>
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
+                    {group.alerts.length} flagged
+                  </span>
+                </div>
+                <ul className="mt-2 space-y-2">
+                  {group.alerts.map((alert, i) => (
+                    <li key={i} className="flex items-start gap-2 text-sm">
+                      <Badge tone={alert.severity === "red" ? "red" : "amber"} className="mt-0.5 shrink-0">
+                        {alert.severity === "red" ? "action needed" : "watch"}
+                      </Badge>
+                      <Link href={alert.href} className="text-slate-700 hover:underline dark:text-slate-300">
+                        {alert.message}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
-          </ul>
+          </div>
         ) : (
-          <p className="mt-3 text-sm text-emerald-700 dark:text-emerald-400">No compliance risks detected right now.</p>
+          companyAlerts.length === 0 && (
+            <p className="mt-3 text-sm text-emerald-700 dark:text-emerald-400">Nothing flagged right now.</p>
+          )
         )}
       </Card>
 

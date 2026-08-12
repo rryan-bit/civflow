@@ -10,7 +10,7 @@ import { EmptyProjectsIllustration } from "@/components/ui/empty-projects-illust
 import { ExpandableGrid } from "@/components/ui/expandable-grid";
 import { Card } from "@/components/ui/card";
 import { Badge, BadgeTone } from "@/components/ui/badge";
-import { getComplianceAlerts } from "@/lib/compliance";
+import { getProjectHealthAlerts } from "@/lib/compliance";
 import { WorkerQuestionsWidget } from "./worker-questions-widget";
 
 const statusTone: Record<string, BadgeTone> = {
@@ -60,26 +60,6 @@ const ShieldIcon = () => (
 
 function formatCurrency(n: number) {
   return n.toLocaleString(undefined, { style: "currency", currency: "AUD", maximumFractionDigits: 0 });
-}
-
-function addDays(dateStr: string, days: number) {
-  const d = new Date(dateStr);
-  d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
-}
-
-function daysUntil(dateStr: string | null): number | null {
-  if (!dateStr) return null;
-  const diff = new Date(dateStr).getTime() - new Date().setHours(0, 0, 0, 0);
-  return Math.round(diff / (1000 * 60 * 60 * 24));
-}
-
-function ExpiryBadge({ label, dateStr }: { label: string; dateStr: string | null }) {
-  const days = daysUntil(dateStr);
-  if (days === null) return <Badge>{label}: not set</Badge>;
-  if (days < 0) return <Badge tone="red">{label}: overdue by {Math.abs(days)}d</Badge>;
-  if (days <= 60) return <Badge tone="amber">{label}: due in {days}d</Badge>;
-  return <Badge tone="emerald">{label}: {days}d away</Badge>;
 }
 
 export default async function DashboardPage() {
@@ -171,8 +151,7 @@ export default async function DashboardPage() {
         .single()
     : { data: null };
   const isResidential = company?.company_type === "residential_builder";
-  const complianceAlerts = await getComplianceAlerts(supabase, profile?.company_id ?? null);
-  const complianceAlertsSorted = [...complianceAlerts].sort((a, b) => (a.severity === b.severity ? 0 : a.severity === "red" ? -1 : 1));
+  const projectHealthAlerts = await getProjectHealthAlerts(supabase, profile?.company_id ?? null);
 
   const entryIds = (entries ?? []).map((e) => e.id);
   const { count: safetyFlags } = entryIds.length
@@ -216,42 +195,6 @@ export default async function DashboardPage() {
   const totalPaidByClient = (paymentClaims ?? []).reduce((sum, c) => sum + (c.paid_amount ?? 0), 0);
   const totalOutstandingClaims = Math.max(0, totalClaimed - totalPaidByClient);
   const totalRetentionHeld = (subPayments ?? []).reduce((sum, p) => sum + p.retention_held, 0);
-
-  const projectsBehindSchedule = (projects ?? []).filter((p) => {
-    if (p.status !== "active" || p.practical_completion_date || !p.contracted_completion_date) return false;
-    const approvedDays = approvedVariationsByProject.get(p.id)?.days ?? 0;
-    const forecast = addDays(p.contracted_completion_date, approvedDays);
-    return forecast < today;
-  });
-
-  const dlpEndingSoon = (projects ?? []).filter((p) => {
-    const days = daysUntil(p.defects_liability_end_date);
-    return days !== null && days >= 0 && days <= 30;
-  });
-
-  // One unified, severity-sorted list of everything flagged across every
-  // project — compliance risks, schedule slippage, defects liability
-  // windows closing, and missing today's entry — instead of four separate
-  // colour-coded boxes stacked on top of each other saying variations of
-  // "something needs attention."
-  const projectHealthAlerts = [
-    ...complianceAlertsSorted,
-    ...projectsBehindSchedule.map((p) => ({
-      severity: "red" as const,
-      message: `${p.name} is forecast past its contracted completion date — review schedule`,
-      href: `/projects/${p.id}/financials`,
-    })),
-    ...dlpEndingSoon.map((p) => ({
-      severity: "amber" as const,
-      message: `${p.name}'s defects liability period ends within 30 days — review defects`,
-      href: `/projects/${p.id}/practical-completion`,
-    })),
-    ...needsAttention.map((p) => ({
-      severity: "amber" as const,
-      message: `${p.name} hasn't had a diary entry logged today — log one now`,
-      href: `/projects/${p.id}/new-entry`,
-    })),
-  ].sort((a, b) => (a.severity === b.severity ? 0 : a.severity === "red" ? -1 : 1));
 
   const recentActivity = allEntries.slice(0, 6).map((e) => ({
     ...e,
@@ -402,51 +345,51 @@ export default async function DashboardPage() {
         </section>
       )}
 
-      {/* Project health — compliance risk, schedule slippage, defects
-          liability windows, and missing entries, unified into one
-          severity-sorted list instead of four separately-coloured boxes all
-          competing to look the most urgent. */}
+      {/* Project health — kept deliberately simple here: just a short list
+          of notifications, most urgent first. No badges, no static status
+          chips, nothing to parse — click one to go straight to what needs
+          attention, or head to Compliance for the full breakdown by
+          project. */}
       {company && (
         <section className="mt-10">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Project health</h2>
-              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Compliance, schedule, and outstanding site diary entries.</p>
+              <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">Notifications across your active projects.</p>
             </div>
             <Link href="/compliance" className="text-xs font-medium text-brand-orange hover:underline">
-              View full compliance details
+              See details by project
             </Link>
           </div>
-          <Card className="mt-3 p-6">
-            <div className="flex flex-wrap gap-2">
-              <ExpiryBadge label="Licence expiry" dateStr={company.qbcc_licence_expiry} />
-              <ExpiryBadge label="MFR report due" dateStr={company.mfr_report_due_date} />
-            </div>
-
-            {projectHealthAlerts.length > 0 ? (
-              <ul className="mt-4 space-y-2.5">
-                {projectHealthAlerts.slice(0, 6).map((alert, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-sm">
-                    <Badge tone={alert.severity === "red" ? "red" : "amber"} className="mt-0.5 shrink-0">
-                      {alert.severity === "red" ? "action needed" : "watch"}
-                    </Badge>
-                    <Link href={alert.href} className="text-slate-700 hover:underline dark:text-slate-300">
-                      {alert.message}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="mt-4 text-sm text-emerald-700 dark:text-emerald-400">
-                Nothing flagged across your active projects right now.
-              </p>
-            )}
-            {projectHealthAlerts.length > 6 && (
-              <p className="mt-2.5 text-xs text-slate-500 dark:text-slate-400">
-                +{projectHealthAlerts.length - 6} more — <Link href="/compliance" className="text-brand-orange hover:underline">view all</Link>
-              </p>
-            )}
-          </Card>
+          {projectHealthAlerts.length > 0 ? (
+            <Card className="mt-3 divide-y divide-slate-100 overflow-hidden p-0 dark:divide-slate-800/80">
+              {projectHealthAlerts.slice(0, 5).map((alert, i) => (
+                <Link
+                  key={i}
+                  href={alert.href}
+                  className="flex items-start gap-3 px-4 py-3 text-sm transition-colors hover:bg-surface-hover"
+                >
+                  <span
+                    className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${alert.severity === "red" ? "bg-red-500" : "bg-amber-500"}`}
+                    aria-hidden="true"
+                  />
+                  <span className="text-slate-700 dark:text-slate-300">{alert.message}</span>
+                </Link>
+              ))}
+              {projectHealthAlerts.length > 5 && (
+                <Link
+                  href="/compliance"
+                  className="block px-4 py-3 text-xs font-medium text-brand-orange hover:underline"
+                >
+                  +{projectHealthAlerts.length - 5} more — see details by project
+                </Link>
+              )}
+            </Card>
+          ) : (
+            <Card className="mt-3 p-5">
+              <p className="text-sm text-emerald-700 dark:text-emerald-400">Nothing flagged across your active projects right now.</p>
+            </Card>
+          )}
         </section>
       )}
 
