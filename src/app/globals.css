@@ -73,6 +73,10 @@
   --animate-slide-up: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-scale-in: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
   --animate-shimmer: shimmer 1.8s ease-in-out infinite;
+  /* Gentle, slow bob for decorative "floating" panels on the landing
+     page — deliberately subtle (10px) and slow (6s) so it reads as
+     ambient life rather than something distracting. */
+  --animate-float: float 6s ease-in-out infinite;
 }
 
 @keyframes fade-in {
@@ -112,6 +116,73 @@
   }
   100% {
     background-position: 200% 0;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* --- Flip-card mechanics (landing page feature cards) ---
+   Standard 3D-flip pattern: perspective on the outer wrapper, the two
+   faces stacked with `position: absolute` inside a `preserve-3d` inner
+   element that rotates 180deg on click, each face hidden from view when
+   it's facing away via `backface-visibility`. -webkit- prefixes are kept
+   because Safari (incl. iOS) still requires them for backface-visibility
+   to work at all. */
+.perspective-1400 {
+  perspective: 1400px;
+}
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1);
+  transform-style: preserve-3d;
+}
+.flip-card-inner.is-flipped {
+  transform: rotateY(180deg);
+}
+.flip-card-face {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.flip-card-face-back {
+  transform: rotateY(180deg);
+}
+
+/* --- Scroll-reveal (landing page) ---
+   Paired with a small IntersectionObserver-driven React component that
+   toggles the `.is-visible` class once, the first time a section enters
+   the viewport — kept as plain CSS classes rather than Tailwind's
+   arbitrary-value syntax so the transition timing is defined in one
+   place. */
+.reveal-on-scroll {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-on-scroll {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .flip-card-inner {
+    transition: none;
   }
 }
 
