@@ -31,6 +31,7 @@ export function ExpandableGrid({
   visibleCount,
   gridClassName,
   collapsedLabel,
+  indicatorColor,
 }: {
   children: ReactNode;
   visibleCount: number;
@@ -39,6 +40,9 @@ export function ExpandableGrid({
    * e.g. "Compliance & quality" — reads as "Compliance & quality (8)".
    * Left unset, the toggle just reads "Show N more". */
   collapsedLabel?: string;
+  /** Optional small dot before the label — e.g. a severity colour for a
+   * per-project notification group, so it can be scanned without opening. */
+  indicatorColor?: string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const items = Children.toArray(children);
@@ -66,7 +70,10 @@ export function ExpandableGrid({
             visible.length > 0 ? "mt-3" : ""
           }`}
         >
-          <span>{toggleLabel}</span>
+          <span className="flex items-center gap-2">
+            {indicatorColor && <span className={`h-2 w-2 shrink-0 rounded-full ${indicatorColor}`} aria-hidden="true" />}
+            {toggleLabel}
+          </span>
           <ChevronDownIcon expanded={expanded} />
         </button>
       )}

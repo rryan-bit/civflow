@@ -8,6 +8,7 @@ import { CompanyTypeForm } from "./company-type-form";
 import { CompanyBrandingForm } from "./company-branding-form";
 import { XeroIntegrationCard } from "./xero-integration-card";
 import { getProjectHealthAlerts, type ComplianceAlert } from "@/lib/compliance";
+import { ExpandableGrid } from "@/components/ui/expandable-grid";
 import { isXeroConfigured } from "@/lib/xero";
 
 function daysUntil(dateStr: string | null): number | null {
@@ -118,30 +119,28 @@ export default async function CompliancePage({
         {sortedProjectGroups.length > 0 ? (
           <div className="mt-4 space-y-4">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">By project</h3>
-            {sortedProjectGroups.map(([projectId, group]) => (
-              <div key={projectId} className="rounded-2xl bg-surface p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <Link href={`/projects/${projectId}`} className="text-sm font-medium text-slate-900 hover:underline dark:text-slate-100">
-                    {group.name}
-                  </Link>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    {group.alerts.length} flagged
-                  </span>
-                </div>
-                <ul className="mt-2 space-y-2">
+            <div className="space-y-2">
+              {sortedProjectGroups.map(([projectId, group]) => (
+                <ExpandableGrid
+                  key={projectId}
+                  visibleCount={0}
+                  collapsedLabel={group.name}
+                  indicatorColor={group.alerts.some((a) => a.severity === "red") ? "bg-red-500" : "bg-amber-500"}
+                  gridClassName="mt-2 space-y-2 rounded-2xl bg-surface p-4"
+                >
                   {group.alerts.map((alert, i) => (
-                    <li key={i} className="flex items-start gap-2 text-sm">
+                    <div key={i} className="flex items-start gap-2 text-sm">
                       <Badge tone={alert.severity === "red" ? "red" : "amber"} className="mt-0.5 shrink-0">
                         {alert.severity === "red" ? "action needed" : "watch"}
                       </Badge>
                       <Link href={alert.href} className="text-slate-700 hover:underline dark:text-slate-300">
                         {alert.message}
                       </Link>
-                    </li>
+                    </div>
                   ))}
-                </ul>
-              </div>
-            ))}
+                </ExpandableGrid>
+              ))}
+            </div>
           </div>
         ) : (
           companyAlerts.length === 0 && (
