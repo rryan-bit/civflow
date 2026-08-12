@@ -35,6 +35,9 @@ export async function updateSession(request: NextRequest) {
   } = await supabase.auth.getUser();
 
   const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
+  // "/" is the public marketing/landing page for signed-out visitors —
+  // page.tsx itself handles sending a signed-in visitor on to /dashboard.
+  const isRootRoute = request.nextUrl.pathname === "/";
   // /join/<token> handles both signed-in and signed-out visitors itself
   // (it shows an invite preview either way), so it's public.
   const isJoinRoute = request.nextUrl.pathname.startsWith("/join");
@@ -61,6 +64,7 @@ export async function updateSession(request: NextRequest) {
   if (
     !user &&
     !isAuthRoute &&
+    !isRootRoute &&
     !isJoinRoute &&
     !isVaryRoute &&
     !isQuoteRoute &&

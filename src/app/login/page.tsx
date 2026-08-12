@@ -13,11 +13,16 @@ function getNextPath(): string {
   return next && next.startsWith("/") ? next : "/dashboard";
 }
 
+function getInitialMode(): "sign-in" | "sign-up" {
+  if (typeof window === "undefined") return "sign-in";
+  return new URLSearchParams(window.location.search).get("mode") === "sign-up" ? "sign-up" : "sign-in";
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const supabase = createClient();
 
-  const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
+  const [mode, setMode] = useState<"sign-in" | "sign-up">(getInitialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
