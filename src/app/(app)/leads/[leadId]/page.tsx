@@ -47,7 +47,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ lea
   const { data: authors } = authorIds.length
     ? await supabase.from("profiles").select("id, full_name").in("id", authorIds)
     : { data: [] as { id: string; full_name: string | null }[] };
-  const authorName = (id: string | null) => (id ? authors?.find((a) => a.id === id)?.full_name ?? "A team member" : "A team member");
+  const authorNames = Object.fromEntries((authors ?? []).map((a) => [a.id, a.full_name ?? "A team member"]));
 
   return (
     <div className="mx-auto max-w-2xl animate-fade-in">
@@ -107,11 +107,11 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ lea
       </div>
 
       <div className="mt-8">
-        <LeadFollowUps leadId={lead.id} followUps={followUps ?? []} authorName={authorName} />
+        <LeadFollowUps leadId={lead.id} followUps={followUps ?? []} authorNames={authorNames} />
       </div>
 
       <div className="mt-8">
-        <LeadNotes leadId={lead.id} notes={notes ?? []} authorName={authorName} />
+        <LeadNotes leadId={lead.id} notes={notes ?? []} authorNames={authorNames} />
       </div>
     </div>
   );

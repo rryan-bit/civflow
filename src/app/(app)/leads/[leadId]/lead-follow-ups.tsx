@@ -16,12 +16,13 @@ function formatDateTime(iso: string) {
 export function LeadFollowUps({
   leadId,
   followUps,
-  authorName,
+  authorNames,
 }: {
   leadId: string;
   followUps: LeadFollowUp[];
-  authorName: (id: string | null) => string;
+  authorNames: Record<string, string>;
 }) {
+  const authorName = (id: string | null) => (id ? authorNames[id] ?? "A team member" : "A team member");
   const router = useRouter();
   const supabase = createClient();
   const toast = useToast();
