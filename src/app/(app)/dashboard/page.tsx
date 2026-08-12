@@ -229,6 +229,12 @@ export default async function DashboardPage() {
     })),
   ].sort((a, b) => (a.dueDate ?? "9999").localeCompare(b.dueDate ?? "9999"));
 
+  // Brand-new companies have nothing to show in Overview, Project health,
+  // or Reminders/Activity yet — skip straight from the AI assistant to
+  // "create your first project" instead of making them scroll past a wall
+  // of zeroes and empty cards first.
+  const hasProjects = (projects?.length ?? 0) > 0;
+
   const askerIds = [...new Set((unansweredWorkerQuestions ?? []).map((q) => q.asked_by))];
   const { data: askerProfiles } = askerIds.length
     ? await supabase.from("profiles").select("id, full_name").in("id", askerIds)
@@ -257,58 +263,61 @@ export default async function DashboardPage() {
       {/* Overview — operational stats and the financial roll-up together in
           one panel, since they're both "the numbers at a glance," rather
           than two separate boxes making the same kind of claim on
-          attention. */}
-      <section className="mt-10">
-        <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Overview</h2>
-        <Card className="mt-3 p-6">
-          {/* Anything with a notification or that needs action (danger/warning
-              tone) always shows — never folded, regardless of count. Danger
-              (real risk) leads, then warning (needs attention soon), then
-              plain orientation numbers fill out the rest of the 8 and are
-              the only ones that ever get tucked behind "Show more". */}
-          <ExpandableGrid visibleCount={8} gridClassName="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
-            <StatCard label="Safety flags" value={safetyFlags ?? 0} icon={<ShieldIcon />} tone="danger" />
-            {!isResidential && <StatCard label="Open Directions to Rectify" value={openDtrCount ?? 0} icon={<AlertIcon />} tone="danger" />}
-            {!isResidential && <StatCard label="Open NCRs" value={openNcrCount ?? 0} icon={<AlertIcon />} tone="danger" />}
-            <StatCard label="Deliveries flagged" value={flaggedMaterialsCount ?? 0} icon={<AlertIcon />} tone="danger" />
-            <StatCard label="Equipment overdue" value={overdueEquipmentCount ?? 0} icon={<AlertIcon />} tone="danger" />
-            <StatCard label="Awaiting review" value={entriesInReview} icon={<ClockIcon />} tone="warning" />
-            <StatCard label="Need today's entry" value={needsAttention.length} icon={<AlertIcon />} tone="warning" />
-            <StatCard label="Payment claims awaiting" value={awaitingPaymentClaims ?? 0} icon={<FileIcon />} tone="warning" />
-            <StatCard label="Active projects" value={activeProjects.length} icon={<CalendarIcon />} />
-            <StatCard label="Entries this week" value={entriesThisWeek} icon={<FileIcon />} />
-            <StatCard label="Open RFIs" value={openRfis ?? 0} icon={<FileIcon />} />
-            <StatCard label="Pending variations" value={pendingVariations ?? 0} icon={<FileIcon />} />
-            <StatCard label="Open leads" value={openLeadsCount ?? 0} icon={<FileIcon />} />
-          </ExpandableGrid>
+          attention. Skipped entirely until there's at least one project —
+          otherwise it's just a wall of zeroes. */}
+      {hasProjects && (
+        <section className="mt-10">
+          <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Overview</h2>
+          <Card className="mt-3 p-6">
+            {/* Anything with a notification or that needs action (danger/warning
+                tone) always shows — never folded, regardless of count. Danger
+                (real risk) leads, then warning (needs attention soon), then
+                plain orientation numbers fill out the rest of the 8 and are
+                the only ones that ever get tucked behind "Show more". */}
+            <ExpandableGrid visibleCount={8} gridClassName="grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
+              <StatCard label="Safety flags" value={safetyFlags ?? 0} icon={<ShieldIcon />} tone="danger" />
+              {!isResidential && <StatCard label="Open Directions to Rectify" value={openDtrCount ?? 0} icon={<AlertIcon />} tone="danger" />}
+              {!isResidential && <StatCard label="Open NCRs" value={openNcrCount ?? 0} icon={<AlertIcon />} tone="danger" />}
+              <StatCard label="Deliveries flagged" value={flaggedMaterialsCount ?? 0} icon={<AlertIcon />} tone="danger" />
+              <StatCard label="Equipment overdue" value={overdueEquipmentCount ?? 0} icon={<AlertIcon />} tone="danger" />
+              <StatCard label="Awaiting review" value={entriesInReview} icon={<ClockIcon />} tone="warning" />
+              <StatCard label="Need today's entry" value={needsAttention.length} icon={<AlertIcon />} tone="warning" />
+              <StatCard label="Payment claims awaiting" value={awaitingPaymentClaims ?? 0} icon={<FileIcon />} tone="warning" />
+              <StatCard label="Active projects" value={activeProjects.length} icon={<CalendarIcon />} />
+              <StatCard label="Entries this week" value={entriesThisWeek} icon={<FileIcon />} />
+              <StatCard label="Open RFIs" value={openRfis ?? 0} icon={<FileIcon />} />
+              <StatCard label="Pending variations" value={pendingVariations ?? 0} icon={<FileIcon />} />
+              <StatCard label="Open leads" value={openLeadsCount ?? 0} icon={<FileIcon />} />
+            </ExpandableGrid>
 
-          {totalOriginalContractValue > 0 && (
-            <div className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-800/80">
-              <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Financials — across active projects
-              </h3>
-              <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
-                <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Revised contract value</p>
-                  <p className="mt-1.5 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(totalRevisedContractValue)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Claimed to date</p>
-                  <p className="mt-1.5 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(totalClaimed)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Outstanding claims</p>
-                  <p className="mt-1.5 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(totalOutstandingClaims)}</p>
-                </div>
-                <div>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">Sub retention held</p>
-                  <p className="mt-1.5 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(totalRetentionHeld)}</p>
+            {totalOriginalContractValue > 0 && (
+              <div className="mt-6 border-t border-slate-100 pt-6 dark:border-slate-800/80">
+                <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                  Financials — across active projects
+                </h3>
+                <div className="mt-3 grid grid-cols-2 gap-x-6 gap-y-5 sm:grid-cols-4">
+                  <div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Revised contract value</p>
+                    <p className="mt-1.5 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(totalRevisedContractValue)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Claimed to date</p>
+                    <p className="mt-1.5 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(totalClaimed)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Outstanding claims</p>
+                    <p className="mt-1.5 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(totalOutstandingClaims)}</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">Sub retention held</p>
+                    <p className="mt-1.5 text-2xl font-semibold text-slate-900 dark:text-slate-100">{formatCurrency(totalRetentionHeld)}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-        </Card>
-      </section>
+            )}
+          </Card>
+        </section>
+      )}
 
       {/* Needs attention — everything personally assigned to you or waiting
           on a reply, in one place instead of two separate boxes. */}
@@ -350,7 +359,7 @@ export default async function DashboardPage() {
           chips, nothing to parse — click one to go straight to what needs
           attention, or head to Compliance for the full breakdown by
           project. */}
-      {company && (
+      {company && hasProjects && (
         <section className="mt-10">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -395,59 +404,63 @@ export default async function DashboardPage() {
 
       {/* Reminders + recent activity — both chronological lists, so they sit
           side by side on wider screens instead of stacking two full-width
-          boxes. */}
-      <section className="mt-10 grid gap-6 lg:grid-cols-2">
-        <div>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Reminders</h2>
-            <Link href="/calendar" className="text-xs font-medium text-brand-orange hover:underline">
-              View calendar
-            </Link>
-          </div>
-          <Card className="mt-3 p-0">
-            {reminders && reminders.length > 0 && (
-              <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
-                {reminders.map((r) => (
-                  <ReminderRow
-                    key={r.id}
-                    id={r.id}
-                    title={r.title}
-                    dueDate={r.due_date}
-                    projectName={r.project_id ? projects?.find((p) => p.id === r.project_id)?.name : undefined}
-                  />
-                ))}
-              </div>
-            )}
-            <div className="p-5">
-              <AddReminderForm projects={projects ?? []} compact />
+          boxes. Skipped until there's at least one project — reminders can
+          technically exist without one, but showing this before "create
+          your first project" just adds another empty box to scroll past. */}
+      {hasProjects && (
+        <section className="mt-10 grid gap-6 lg:grid-cols-2">
+          <div>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Reminders</h2>
+              <Link href="/calendar" className="text-xs font-medium text-brand-orange hover:underline">
+                View calendar
+              </Link>
             </div>
-          </Card>
-        </div>
+            <Card className="mt-3 p-0">
+              {reminders && reminders.length > 0 && (
+                <div className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                  {reminders.map((r) => (
+                    <ReminderRow
+                      key={r.id}
+                      id={r.id}
+                      title={r.title}
+                      dueDate={r.due_date}
+                      projectName={r.project_id ? projects?.find((p) => p.id === r.project_id)?.name : undefined}
+                    />
+                  ))}
+                </div>
+              )}
+              <div className="p-5">
+                <AddReminderForm projects={projects ?? []} compact />
+              </div>
+            </Card>
+          </div>
 
-        <div>
-          <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Recent activity</h2>
-          {recentActivity.length > 0 ? (
-            <Card className="mt-3 divide-y divide-slate-100 overflow-hidden p-0 dark:divide-slate-800/80">
-              {recentActivity.map((e) => (
-                <Link
-                  key={e.id}
-                  href={`/projects/${e.project_id}/entries/${e.id}`}
-                  className="flex items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-surface-hover"
-                >
-                  <span className="text-slate-900 dark:text-slate-100">
-                    {e.projectName} <span className="text-slate-500 dark:text-slate-400">— {e.entry_date}</span>
-                  </span>
-                  <Badge tone={statusTone[e.status]}>{e.status.replace("_", " ")}</Badge>
-                </Link>
-              ))}
-            </Card>
-          ) : (
-            <Card className="mt-3 p-5">
-              <p className="text-sm text-slate-500 dark:text-slate-400">No site diary activity logged yet.</p>
-            </Card>
-          )}
-        </div>
-      </section>
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight text-slate-900 dark:text-slate-100">Recent activity</h2>
+            {recentActivity.length > 0 ? (
+              <Card className="mt-3 divide-y divide-slate-100 overflow-hidden p-0 dark:divide-slate-800/80">
+                {recentActivity.map((e) => (
+                  <Link
+                    key={e.id}
+                    href={`/projects/${e.project_id}/entries/${e.id}`}
+                    className="flex items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-surface-hover"
+                  >
+                    <span className="text-slate-900 dark:text-slate-100">
+                      {e.projectName} <span className="text-slate-500 dark:text-slate-400">— {e.entry_date}</span>
+                    </span>
+                    <Badge tone={statusTone[e.status]}>{e.status.replace("_", " ")}</Badge>
+                  </Link>
+                ))}
+              </Card>
+            ) : (
+              <Card className="mt-3 p-5">
+                <p className="text-sm text-slate-500 dark:text-slate-400">No site diary activity logged yet.</p>
+              </Card>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* Projects */}
       <section className="mt-10">

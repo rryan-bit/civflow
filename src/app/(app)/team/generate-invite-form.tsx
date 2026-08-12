@@ -8,6 +8,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 
+const ROLE_DESCRIPTIONS: Record<UserRole, string> = {
+  supervisor: "Runs the day-to-day on a project — diary entries, RFIs, safety, and whatever's assigned to them. No access to company settings.",
+  project_manager: "Everything a supervisor has, plus the commercial side of a project — financials, variations, payment claims.",
+  admin: "Full access, including company settings, licence details, billing integrations, and inviting others.",
+  field_worker: "A simplified view scoped to just one project — site diary and safety (read-only), their own hours, and the ability to post photos and ask questions.",
+};
+
 export default function GenerateInviteForm() {
   const router = useRouter();
   const supabase = createClient();
@@ -112,12 +119,7 @@ export default function GenerateInviteForm() {
         </Button>
       </div>
 
-      {role === "field_worker" && (
-        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          Field workers get a simplified view scoped to just this project — site diary and safety (read-only), their
-          own hours, and the ability to post photos and ask questions.
-        </p>
-      )}
+      <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">{ROLE_DESCRIPTIONS[role]}</p>
 
       {link && (
         <div className="mt-3 flex animate-slide-up items-center gap-2">
